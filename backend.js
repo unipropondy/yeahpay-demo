@@ -1,75 +1,171 @@
 const express = require('express');
 const cors = require('cors');
 const QRCode = require('qrcode');
-const path = require('path');
+const crypto = require('crypto');
+const axios = require('axios');
 
 const app = express();
-
-// Railway uses process.env.PORT - இது முக்கியம்!
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
 
-// Serve static files from 'public' folder (Railway will use this)
-app.use(express.static(path.join(__dirname, 'public')));
+// ============ SINGAPORE API CONFIGURATION ============
+// 🔥 REPLACE WITH YOUR ACTUAL CREDENTIALS FROM YEAHPAY SINGAPORE
+const CONFIG = {
+    // Test environment
+    apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance/open-api/',
+    // Production: 'https://open-api.yeahpay.sg/acceptance/acceptance-open-api/',
+    
+    appId: 'YOUR_APP_ID',           // 🔥 Get from YeahPay
+    merchantId: 'YOUR_MERCHANT_ID',  // 🔥 Get from YeahPay
+    apiKey: 'YOUR_API_KEY',          // 🔥 Get from YeahPay
+    version: '1.0',
+    algorithm: 'SHA-512'
+};
 
-// Test merchant ID - Replace with your actual test merchant ID
-const TEST_MERCHANT_ID = "826010000001234";
+// Helper: Generate signature
+function generateSignature(url, appId, timestamp, version, nonce, body, apiKey) {
+    // Format: URL\nappId\ntimestamp\nversion\nnonce\nbody\napiKey
+    const signString = `${url}\n${appId}\n${timestamp}\n${version}\n${nonce}\n${body}\n${apiKey}`;
+    return crypto.createHash('sha512').update(signString, 'utf8').digest('hex');
+}
 
-// Create payment endpoint
+// Helper: Generate random nonce
+function generateNonce(length = 16) {
+    return crypto.randomBytes(length).toString('hex');
+}
+
+// API: Create Payment (Master Scan - Consumer scans QR)
 app.post('/api/create-payment', async (req, res) => {
-    const { amount, productName } = req.body;
+    const { amount, productName, payWay } = req.body;
     
-    // Generate unique order ID
-    const orderId = 'DEMO_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const orderId = 'ORDER_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const timestamp = Date.now().toString();
+    const nonce = generateNonce();
+    const urlPath = '/order/unifiedOrder';
     
-    console.log(`[ORDER] Created: ${orderId} | Amount: ${amount} | Product: ${productName}`);
+    // Request body as per Singapore API docs
+    const requestBody = {
+        payWay: payWay || 'WXZF',  // WXZF=WeChat, ZFBZF=Alipay, PayNowPay=PayNow
+        amount: amount || '0.01',
+        currency: 'SGD',
+        merchantId: CONFIG.merchantId,
+        thirdOrderId: orderId,
+        body: productName || 'Demo Product',
+        attach: 'test_payment',
+        orderExpiration: '600'  // 10 minutes
+    };
     
-    // YeahPay official demo URL
-    const demoPaymentUrl = `https://mertest.ysepay.com/merchant_web/demo/merchantExperience.do?method=webExperience`;
+    const bodyString = JSON.stringify(requestBody);
     
-    // Generate QR code as base64
-    const qrCodeBase64 = await QRCode.toDataURL(demoPaymentUrl);
+    // Generate signature
+    const signature = generateSignature(
+        urlPath,
+        CONFIG.appId,
+        timestamp,
+        CONFIG.version,
+        nonce,
+        bodyString,
+        CONFIG.apiKey
+    );
     
-    res.json({
-        success: true,
-        orderId: orderId,
-        qrCode: qrCodeBase64,
-        paymentUrl: demoPaymentUrl,
-        amount: amount,
-        message: "Scan QR code to open YeahPay demo gateway"
-    });
+    console.log(`[ORDER] Creating: ${orderId} | Amount: ${amount} SGD`);
+    
+    try {
+        // Call YeahPay Singapore API
+        const response = await axios.post(CONFIG.apiUrl + 'order/unifiedOrder', requestBody, {
+            headers: {
+                'Content-Type': 'application/json',
+                'appId': CONFIG.appId,
+                'timestamp': timestamp,
+                'version': CONFIG.version,
+                'algorithm': CONFIG.algorithm,
+                'nonce': nonce,
+                'signature': signature
+            }
+        });
+        
+        const apiResponse = response.data;
+        
+        if (apiResponse.code === '0' && apiResponse.data && apiResponse.data.tdCode) {
+            // Generate QR code from the tdCode URL
+            const qrCodeBase64 = await QRCode.toDataURL(apiResponse.data.tdCode);
+            
+            res.json({
+                success: true,
+                orderId: orderId,
+                qrCode: qrCodeBase64,
+                paymentUrl: apiResponse.data.tdCode,
+                leshuaOrderId: apiResponse.data.leshuaOrderId,
+                amount: amount,
+                message: "Scan QR code with WeChat/Alipay/PayNow"
+            });
+        } else {
+            throw new Error(apiResponse.message || 'API returned error');
+        }
+        
+    } catch (error) {
+        console.error('API Error:', error.response?.data || error.message);
+        res.json({
+            success: false,
+            error: error.response?.data?.message || error.message,
+            message: "Please check API credentials. Contact YeahPay for appId and merchantId."
+        });
+    }
 });
 
-// Generate QR endpoint
-app.post('/api/generate-qr', async (req, res) => {
-    const { amount } = req.body;
-    const testPaymentUrl = `https://mertest.ysepay.com/merchant_web/demo/merchantExperience.do?method=webExperience`;
-    const qrCodeBase64 = await QRCode.toDataURL(testPaymentUrl);
+// API: Check Payment Status
+app.get('/api/check-status/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    const timestamp = Date.now().toString();
+    const nonce = generateNonce();
+    const urlPath = '/order/queryOrder';
     
-    res.json({
-        success: true,
-        qrCode: qrCodeBase64,
-        qrData: testPaymentUrl
-    });
+    const requestBody = {
+        merchantId: CONFIG.merchantId,
+        thirdOrderId: orderId
+    };
+    
+    const bodyString = JSON.stringify(requestBody);
+    const signature = generateSignature(
+        urlPath, CONFIG.appId, timestamp, CONFIG.version, nonce, bodyString, CONFIG.apiKey
+    );
+    
+    try {
+        const response = await axios.post(CONFIG.apiUrl + 'order/queryOrder', requestBody, {
+            headers: {
+                'Content-Type': 'application/json',
+                'appId': CONFIG.appId,
+                'timestamp': timestamp,
+                'version': CONFIG.version,
+                'algorithm': CONFIG.algorithm,
+                'nonce': nonce,
+                'signature': signature
+            }
+        });
+        
+        const data = response.data;
+        if (data.code === '0' && data.data) {
+            res.json({
+                status: data.data.status === '2' ? 'success' : 'pending',
+                message: data.data.status === '2' ? 'Payment successful' : 'Waiting for payment'
+            });
+        } else {
+            res.json({ status: 'pending', message: 'Checking...' });
+        }
+    } catch (error) {
+        res.json({ status: 'pending', message: 'Status check failed' });
+    }
 });
 
-// Status check endpoint
-app.get('/api/check-status/:orderId', (req, res) => {
-    res.json({
-        status: "pending",
-        message: "Waiting for payment..."
-    });
-});
-
-// 🔥 IMPORTANT: Serve index.html for all other routes (For Railway)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 Open browser: http://localhost:${PORT}`);
-    console.log(`🌐 Railway URL will auto-assign PORT`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📍 API URL: ${CONFIG.apiUrl}`);
+    console.log(`⚠️ Make sure to replace YOUR_APP_ID, YOUR_MERCHANT_ID, YOUR_API_KEY`);
 });
