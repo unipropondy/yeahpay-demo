@@ -15,7 +15,7 @@ app.use(express.static('public'));
 // ============ SINGAPORE API CONFIGURATION ============
 const CONFIG = {
     // Test environment - NO trailing slash
-    apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance/open-api',
+    apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance-open-api',
     
     appId: 'YOUR_APP_ID',           
     merchantId: 'YOUR_MERCHANT_ID',  
