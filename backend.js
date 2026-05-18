@@ -3,7 +3,7 @@ const cors = require('cors');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const axios = require('axios');
-const path = require('path');  // 🔥 ADDED
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,15 +13,13 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // ============ SINGAPORE API CONFIGURATION ============
-// 🔥 REPLACE WITH YOUR ACTUAL CREDENTIALS FROM YEAHPAY SINGAPORE
 const CONFIG = {
-    // Test environment
-    apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance/open-api/',
-    // Production: 'https://open-api.yeahpay.sg/acceptance/acceptance-open-api/',
+    // Test environment - NO trailing slash
+    apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance/open-api',
     
-    appId: 'YOUR_APP_ID',           // 🔥 Get from YeahPay
-    merchantId: 'YOUR_MERCHANT_ID',  // 🔥 Get from YeahPay
-    apiKey: 'YOUR_API_KEY',          // 🔥 Get from YeahPay
+    appId: 'YOUR_APP_ID',           
+    merchantId: 'YOUR_MERCHANT_ID',  
+    apiKey: 'YOUR_API_KEY',          
     version: '1.0',
     algorithm: 'SHA-512'
 };
@@ -44,7 +42,7 @@ app.post('/api/create-payment', async (req, res) => {
     const orderId = 'ORDER_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
     const timestamp = Date.now().toString();
     const nonce = generateNonce();
-    const urlPath = '/order/unifiedOrder';
+    const urlPath = '/order/unifiedOrder';  // Path for signature
     
     const requestBody = {
         payWay: payWay || 'WXZF',
@@ -58,14 +56,26 @@ app.post('/api/create-payment', async (req, res) => {
     };
     
     const bodyString = JSON.stringify(requestBody);
+    
+    // Generate signature using the path (not full URL)
     const signature = generateSignature(
-        urlPath, CONFIG.appId, timestamp, CONFIG.version, nonce, bodyString, CONFIG.apiKey
+        urlPath,
+        CONFIG.appId,
+        timestamp,
+        CONFIG.version,
+        nonce,
+        bodyString,
+        CONFIG.apiKey
     );
     
     console.log(`[ORDER] Creating: ${orderId} | Amount: ${amount} SGD | PayWay: ${payWay}`);
     
     try {
-        const response = await axios.post(CONFIG.apiUrl + 'order/unifiedOrder', requestBody, {
+        // 🔥 FIXED: Proper URL construction - no double slash
+        const fullUrl = `${CONFIG.apiUrl}${urlPath}`;
+        console.log(`[REQUEST URL] ${fullUrl}`);
+        
+        const response = await axios.post(fullUrl, requestBody, {
             headers: {
                 'Content-Type': 'application/json',
                 'appId': CONFIG.appId,
@@ -80,6 +90,7 @@ app.post('/api/create-payment', async (req, res) => {
         const apiResponse = response.data;
         console.log('[API Response]', apiResponse);
         
+        // Check for success (code: "0" according to docs page 2)
         if (apiResponse.code === '0' && apiResponse.data && apiResponse.data.tdCode) {
             const qrCodeBase64 = await QRCode.toDataURL(apiResponse.data.tdCode);
             
@@ -101,7 +112,7 @@ app.post('/api/create-payment', async (req, res) => {
         res.json({
             success: false,
             error: error.response?.data?.message || error.message,
-            message: "Please check API credentials. Contact YeahPay for appId and merchantId."
+            message: "API call failed. Check appId, merchantId, and apiKey."
         });
     }
 });
@@ -124,7 +135,8 @@ app.get('/api/check-status/:orderId', async (req, res) => {
     );
     
     try {
-        const response = await axios.post(CONFIG.apiUrl + 'order/queryOrder', requestBody, {
+        const fullUrl = `${CONFIG.apiUrl}${urlPath}`;
+        const response = await axios.post(fullUrl, requestBody, {
             headers: {
                 'Content-Type': 'application/json',
                 'appId': CONFIG.appId,
@@ -150,7 +162,7 @@ app.get('/api/check-status/:orderId', async (req, res) => {
     }
 });
 
-// Serve index.html for all routes
+// Serve index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -158,5 +170,4 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📍 API URL: ${CONFIG.apiUrl}`);
-    console.log(`⚠️ Make sure to replace YOUR_APP_ID, YOUR_MERCHANT_ID, YOUR_API_KEY`);
 });
