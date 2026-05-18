@@ -122,14 +122,6 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .currency {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #666;
-        }
-
         .input-wrapper {
             position: relative;
         }
@@ -301,6 +293,19 @@
     <script>
         let currentOrderId = null;
         
+        // 🔥 DYNAMIC API URL - Automatically detects Railway or Local
+        function getApiBaseUrl() {
+            // If running on Railway (production)
+            if (window.location.hostname.includes('railway.app') || 
+                window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                return '';  // Same domain - relative path works
+            }
+            // If running locally
+            return 'http://localhost:3000';
+        }
+        
+        const API_BASE_URL = getApiBaseUrl();
+        
         async function generateQRCode() {
             const amount = document.getElementById('amount').value;
             const generateBtn = document.getElementById('generateBtn');
@@ -322,7 +327,8 @@
             statusDiv.style.display = 'none';
             
             try {
-                const response = await fetch('/api/create-payment', {
+                // 🔥 DYNAMIC API CALL - Works on Railway & Local
+                const response = await fetch(`${API_BASE_URL}/api/create-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -378,7 +384,7 @@
             if (!currentOrderId) return;
             
             try {
-                const response = await fetch(`/api/check-status/${currentOrderId}`);
+                const response = await fetch(`${API_BASE_URL}/api/check-status/${currentOrderId}`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
@@ -401,6 +407,9 @@
                 generateQRCode();
             }
         });
+        
+        // Display API mode on load
+        console.log(`🔗 API Base URL: ${API_BASE_URL || '(same domain)'}`);
     </script>
 </body>
 </html>

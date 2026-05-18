@@ -1,20 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const QRCode = require('qrcode');
-const crypto = require('crypto');
+const path = require('path');
 
 const app = express();
+
+// Railway uses process.env.PORT - இது முக்கியம்!
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
 
-// Test merchant ID - You need to replace with your actual test merchant ID
-// Get this from your YeahPay merchant list (826xxxxxx format)
-const TEST_MERCHANT_ID = "826010000001234";  // 🔥 REPLACE WITH YOUR ACTUAL TEST MERCHANT ID
+// Serve static files from 'public' folder (Railway will use this)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Test endpoint (Official YeahPay Demo - No real API call, just demo response)
-// Since we don't have real credentials yet, we'll generate a mock QR that opens YeahPay demo
+// Test merchant ID - Replace with your actual test merchant ID
+const TEST_MERCHANT_ID = "826010000001234";
 
+// Create payment endpoint
 app.post('/api/create-payment', async (req, res) => {
     const { amount, productName } = req.body;
     
@@ -23,8 +26,7 @@ app.post('/api/create-payment', async (req, res) => {
     
     console.log(`[ORDER] Created: ${orderId} | Amount: ${amount} | Product: ${productName}`);
     
-    // 🔥 DEMO MODE: Generate a QR code that opens YeahPay official demo experience
-    // This is the official YeahPay test gateway - REAL demo payment experience
+    // YeahPay official demo URL
     const demoPaymentUrl = `https://mertest.ysepay.com/merchant_web/demo/merchantExperience.do?method=webExperience`;
     
     // Generate QR code as base64
@@ -40,13 +42,10 @@ app.post('/api/create-payment', async (req, res) => {
     });
 });
 
-// Alternative: Direct QR code generation without API call
+// Generate QR endpoint
 app.post('/api/generate-qr', async (req, res) => {
     const { amount } = req.body;
-    
-    // YeahPay test payment page (simulated checkout)
     const testPaymentUrl = `https://mertest.ysepay.com/merchant_web/demo/merchantExperience.do?method=webExperience`;
-    
     const qrCodeBase64 = await QRCode.toDataURL(testPaymentUrl);
     
     res.json({
@@ -56,18 +55,21 @@ app.post('/api/generate-qr', async (req, res) => {
     });
 });
 
-// Status check endpoint (for polling)
+// Status check endpoint
 app.get('/api/check-status/:orderId', (req, res) => {
-    // In real implementation, you would check with YeahPay API
-    // For demo, we'll return pending
     res.json({
         status: "pending",
         message: "Waiting for payment..."
     });
 });
 
-const PORT = 3000;
+// 🔥 IMPORTANT: Serve index.html for all other routes (For Railway)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📱 Open browser: http://localhost:${PORT}`);
+    console.log(`🌐 Railway URL will auto-assign PORT`);
 });
