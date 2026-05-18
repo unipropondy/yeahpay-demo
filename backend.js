@@ -16,7 +16,7 @@ app.use(express.static('public'));
 const CONFIG = {
     apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance-open-api',
     appId: 'YOUR_APP_ID',           // 🔥 Replace with actual
-    merchantId: 'YOUR_MERCHANT_ID',  // 🔥 Replace with actual
+    merchantId: '4079688802',  // 🔥 Replace with actual
     apiKey: 'YOUR_API_KEY',          // 🔥 Replace with actual
     version: '1.0',
     algorithm: 'SHA-512'
