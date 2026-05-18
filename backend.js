@@ -14,19 +14,19 @@ app.use(express.static('public'));
 
 // ============ SINGAPORE API CONFIGURATION ============
 const CONFIG = {
-    // Test environment - NO trailing slash
     apiUrl: 'https://t-acquire-business.lepass.cn/gw/abroad-business-acceptance-open-api',
-    
-    appId: 'YOUR_APP_ID',           
-    merchantId: 'YOUR_MERCHANT_ID',  
-    apiKey: 'YOUR_API_KEY',          
+    appId: 'YOUR_APP_ID',           // 🔥 Replace with actual
+    merchantId: 'YOUR_MERCHANT_ID',  // 🔥 Replace with actual
+    apiKey: 'YOUR_API_KEY',          // 🔥 Replace with actual
     version: '1.0',
     algorithm: 'SHA-512'
 };
 
 // Helper: Generate signature
 function generateSignature(url, appId, timestamp, version, nonce, body, apiKey) {
+    // Exact format: url\nappId\ntimestamp\nversion\nonce\nbody\napiKey
     const signString = `${url}\n${appId}\n${timestamp}\n${version}\n${nonce}\n${body}\n${apiKey}`;
+    console.log('[SIGN STRING LENGTH]', signString.length);
     return crypto.createHash('sha512').update(signString, 'utf8').digest('hex');
 }
 
@@ -42,14 +42,15 @@ app.post('/api/create-payment', async (req, res) => {
     const orderId = 'ORDER_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
     const timestamp = Date.now().toString();
     const nonce = generateNonce();
-    const urlPath = '/order/unifiedOrder';  // Path for signature
+    const urlPath = '/order/unifiedOrder';
     
+    // 🔥 CRITICAL: All values must be strings
     const requestBody = {
         payWay: payWay || 'WXZF',
-        amount: amount || '0.01',
+        amount: String(amount || '0.01'),      // ✅ String
         currency: 'SGD',
         merchantId: CONFIG.merchantId,
-        thirdOrderId: orderId,
+        thirdOrderId: String(orderId),          // ✅ String
         body: productName || 'Demo Product',
         attach: 'test_payment',
         orderExpiration: '600'
@@ -57,7 +58,6 @@ app.post('/api/create-payment', async (req, res) => {
     
     const bodyString = JSON.stringify(requestBody);
     
-    // Generate signature using the path (not full URL)
     const signature = generateSignature(
         urlPath,
         CONFIG.appId,
@@ -68,10 +68,10 @@ app.post('/api/create-payment', async (req, res) => {
         CONFIG.apiKey
     );
     
-    console.log(`[ORDER] Creating: ${orderId} | Amount: ${amount} SGD | PayWay: ${payWay}`);
+    console.log(`[ORDER] ID: ${orderId} | Amount: ${amount} SGD | PayWay: ${payWay}`);
+    console.log('[REQUEST BODY]', bodyString);
     
     try {
-        // 🔥 FIXED: Proper URL construction - no double slash
         const fullUrl = `${CONFIG.apiUrl}${urlPath}`;
         console.log(`[REQUEST URL] ${fullUrl}`);
         
@@ -88,9 +88,8 @@ app.post('/api/create-payment', async (req, res) => {
         });
         
         const apiResponse = response.data;
-        console.log('[API Response]', apiResponse);
+        console.log('[API RESPONSE]', JSON.stringify(apiResponse, null, 2));
         
-        // Check for success (code: "0" according to docs page 2)
         if (apiResponse.code === '0' && apiResponse.data && apiResponse.data.tdCode) {
             const qrCodeBase64 = await QRCode.toDataURL(apiResponse.data.tdCode);
             
@@ -108,11 +107,11 @@ app.post('/api/create-payment', async (req, res) => {
         }
         
     } catch (error) {
-        console.error('API Error:', error.response?.data || error.message);
+        console.error('[API ERROR]', error.response?.data || error.message);
         res.json({
             success: false,
             error: error.response?.data?.message || error.message,
-            message: "API call failed. Check appId, merchantId, and apiKey."
+            message: "API call failed. Check credentials and request format."
         });
     }
 });
@@ -162,7 +161,6 @@ app.get('/api/check-status/:orderId', async (req, res) => {
     }
 });
 
-// Serve index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -170,4 +168,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📍 API URL: ${CONFIG.apiUrl}`);
+    console.log(`⚠️ Make sure appId, merchantId, apiKey are set correctly`);
 });
