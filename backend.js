@@ -3,6 +3,7 @@ const cors = require('cors');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const axios = require('axios');
+const path = require('path');  // 🔥 ADDED
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,7 +28,6 @@ const CONFIG = {
 
 // Helper: Generate signature
 function generateSignature(url, appId, timestamp, version, nonce, body, apiKey) {
-    // Format: URL\nappId\ntimestamp\nversion\nnonce\nbody\napiKey
     const signString = `${url}\n${appId}\n${timestamp}\n${version}\n${nonce}\n${body}\n${apiKey}`;
     return crypto.createHash('sha512').update(signString, 'utf8').digest('hex');
 }
@@ -37,7 +37,7 @@ function generateNonce(length = 16) {
     return crypto.randomBytes(length).toString('hex');
 }
 
-// API: Create Payment (Master Scan - Consumer scans QR)
+// API: Create Payment
 app.post('/api/create-payment', async (req, res) => {
     const { amount, productName, payWay } = req.body;
     
@@ -46,35 +46,25 @@ app.post('/api/create-payment', async (req, res) => {
     const nonce = generateNonce();
     const urlPath = '/order/unifiedOrder';
     
-    // Request body as per Singapore API docs
     const requestBody = {
-        payWay: payWay || 'WXZF',  // WXZF=WeChat, ZFBZF=Alipay, PayNowPay=PayNow
+        payWay: payWay || 'WXZF',
         amount: amount || '0.01',
         currency: 'SGD',
         merchantId: CONFIG.merchantId,
         thirdOrderId: orderId,
         body: productName || 'Demo Product',
         attach: 'test_payment',
-        orderExpiration: '600'  // 10 minutes
+        orderExpiration: '600'
     };
     
     const bodyString = JSON.stringify(requestBody);
-    
-    // Generate signature
     const signature = generateSignature(
-        urlPath,
-        CONFIG.appId,
-        timestamp,
-        CONFIG.version,
-        nonce,
-        bodyString,
-        CONFIG.apiKey
+        urlPath, CONFIG.appId, timestamp, CONFIG.version, nonce, bodyString, CONFIG.apiKey
     );
     
-    console.log(`[ORDER] Creating: ${orderId} | Amount: ${amount} SGD`);
+    console.log(`[ORDER] Creating: ${orderId} | Amount: ${amount} SGD | PayWay: ${payWay}`);
     
     try {
-        // Call YeahPay Singapore API
         const response = await axios.post(CONFIG.apiUrl + 'order/unifiedOrder', requestBody, {
             headers: {
                 'Content-Type': 'application/json',
@@ -88,9 +78,9 @@ app.post('/api/create-payment', async (req, res) => {
         });
         
         const apiResponse = response.data;
+        console.log('[API Response]', apiResponse);
         
         if (apiResponse.code === '0' && apiResponse.data && apiResponse.data.tdCode) {
-            // Generate QR code from the tdCode URL
             const qrCodeBase64 = await QRCode.toDataURL(apiResponse.data.tdCode);
             
             res.json({
@@ -160,6 +150,7 @@ app.get('/api/check-status/:orderId', async (req, res) => {
     }
 });
 
+// Serve index.html for all routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
