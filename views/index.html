@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>YeahPay Payment Gateway - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 60px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: white;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            margin-bottom: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .amount-section {
+            background: #f8f9fc;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .amount-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .amount-input {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .currency {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        
+        .amount-input input {
+            font-size: 52px;
+            font-weight: 800;
+            border: none;
+            background: transparent;
+            width: 200px;
+            text-align: center;
+            color: #667eea;
+            outline: none;
+            font-family: monospace;
+        }
+        
+        .amount-input input:focus {
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .payway-select {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .payway-option {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 40px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .payway-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .qr-container {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+            border: 2px dashed #e5e7eb;
+            margin-bottom: 24px;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-placeholder {
+            text-align: center;
+        }
+        
+        .qr-icon {
+            font-size: 64px;
+            margin-bottom: 12px;
+        }
+        
+        .qr-code {
+            text-align: center;
+        }
+        
+        .qr-code img {
+            width: 200px;
+            height: 200px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        
+        .order-info {
+            background: #f0fdf4;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+        
+        .order-info.show {
+            display: block;
+        }
+        
+        .order-info p {
+            margin: 6px 0;
+            color: #166534;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            width: 100px;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 60px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 1000;
+            transform: translateY(100px);
+            transition: transform 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+        }
+        
+        .toast.success { background: #059669; }
+        .toast.error { background: #dc2626; }
+        
+        .micro-pay-section {
+            display: none;
+        }
+        
+        .micro-pay-section.show {
+            display: block;
+        }
+        
+        .auth-code-input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 2px;
+            font-family: monospace;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                padding: 24px;
+            }
+            .amount-input input {
+                font-size: 40px;
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="mode-toggle">
+            <button class="mode-btn active" onclick="setMode('scan')">📱 Customer Scan QR</button>
+            <button class="mode-btn" onclick="setMode('micro')">📷 Cashier Scan Code</button>
+        </div>
+        
+        <!-- Master Scan Mode - Customer Scans QR -->
+        <div id="scanMode" class="card">
+            <div class="header">
+                <div class="logo">💳</div>
+                <h1>YeahPay Payment</h1>
+                <p class="subtitle">Customer scans QR code to pay</p>
+            </div>
+            
+            <div class="amount-section">
+                <div class="amount-label">Payment Amount</div>
+                <div class="amount-input">
+                    <span class="currency">S$</span>
+                    <input type="number" id="amount" value="1.00" step="0.01" min="0.01">
+                </div>
+                <div class="payway-select">
+                    <div class="payway-option selected" data-payway="WXZF">🇨🇳 WeChat</div>
+                    <div class="payway-option" data-payway="ZFBZF">🇨🇳 Alipay</div>
+                    <div class="payway-option" data-payway="PayNowPay">🇸🇬 PayNow</div>
+                    <div class="payway-option" data-payway="GrabPay">🚗 GrabPay</div>
+                </div>
+            </div>
+            
+            <div class="qr-container" id="qrContainer">
+                <div class="qr-placeholder">
+                    <div class="qr-icon">📱</div>
+                    <p>Enter amount and click below</p>
+                    <p style="font-size: 12px; color: #999;">QR code will appear here</p>
+                </div>
+            </div>
+            
+            <div id="orderInfo" class="order-info"></div>
+            
+            <button class="btn-primary" id="generateBtn" onclick="generateQR()">
+                💰 Generate QR Code
+            </button>
+            <button class="btn-secondary" id="checkStatusBtn" onclick="checkStatus()" style="display: none;">
+                🔄 Check Payment Status
+            </button>
+        </div>
+        
+        <!-- Micro Pay Mode - Cashier Scans Customer Code -->
+        <div id="microMode" class="card" style="display: none;">
+            <div class="header">
+                <div class="logo">📷</div>
+                <h1>Scan Customer Code</h1>
+                <p class="subtitle">Use scanner to read customer's payment barcode</p>
+            </div>
+            
+            <div class="amount-section">
+                <div class="amount-label">Payment Amount</div>
+                <div class="amount-input">
+                    <span class="currency">S$</span>
+                    <input type="number" id="microAmount" value="1.00" step="0.01" min="0.01">
+                </div>
+            </div>
+            
+            <input type="text" id="authCode" class="auth-code-input" placeholder="Scan or enter customer barcode code" autocomplete="off">
+            
+            <button class="btn-primary" onclick="processMicroPay()">
+                💳 Process Payment
+            </button>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script>
+        let currentOrderId = null;
+        let statusInterval = null;
+        let currentPayway = 'WXZF';
+        
+        // Payway selection
+        document.querySelectorAll('.payway-option').forEach(opt => {
+            opt.addEventListener('click', function() {
+                document.querySelectorAll('.payway-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                currentPayway = this.dataset.payway;
+            });
+        });
+        
+        function setMode(mode) {
+            const scanMode = document.getElementById('scanMode');
+            const microMode = document.getElementById('microMode');
+            const btns = document.querySelectorAll('.mode-btn');
+            
+            btns.forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'scan') {
+                scanMode.style.display = 'block';
+                microMode.style.display = 'none';
+                btns[0].classList.add('active');
+                // Reset QR
+                resetQR();
+            } else {
+                scanMode.style.display = 'none';
+                microMode.style.display = 'block';
+                btns[1].classList.add('active');
+            }
+        }
+        
+        async function generateQR() {
+            const amount = document.getElementById('amount').value;
+            const generateBtn = document.getElementById('generateBtn');
+            
+            if (!amount || amount <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Generating...';
+            
+            try {
+                const response = await fetch('/api/payment/generate-qr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount).toFixed(2),
+                        payWay: currentPayway
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Response:', result);
+                
+                if (result.success) {
+                    currentOrderId = result.data.orderId;
+                    
+                    // Display QR code
+                    const qrContainer = document.getElementById('qrContainer');
+                    if (result.data.qrBase64) {
+                        qrContainer.innerHTML = `
+                            <div class="qr-code">
+                                <img src="${result.data.qrBase64}" alt="QR Code">
+                                <p style="margin-top: 16px; font-size: 13px; color: #666;">
+                                    Have customer scan with ${getPaywayName(currentPayway)}
+                                </p>
+                                <p style="font-size: 11px; color: #999;">Amount: S$${result.data.amount}</p>
+                            </div>
+                        `;
+                    } else if (result.data.qrUrl) {
+                        qrContainer.innerHTML = `
+                            <div class="qr-code">
+                                <div id="tempQr"></div>
+                                <p style="margin-top: 16px; font-size: 13px; color: #666;">
+                                    Have customer scan with ${getPaywayName(currentPayway)}
+                                </p>
+                            </div>
+                        `;
+                        // Generate QR from URL
+                        const QRCodeLib = new QRCode(document.getElementById("tempQr"), {
+                            text: result.data.qrUrl,
+                            width: 200,
+                            height: 200
+                        });
+                    }
+                    
+                    // Show order info
+                    const orderInfo = document.getElementById('orderInfo');
+                    orderInfo.innerHTML = `
+                        <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
+                        <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
+                        <p><span class="info-label">Status:</span> <span class="status-badge status-pending">Waiting for payment</span></p>
+                        <p><span class="info-label">Payment Method:</span> ${getPaywayName(currentPayway)}</p>
+                    `;
+                    orderInfo.classList.add('show');
+                    
+                    document.getElementById('checkStatusBtn').style.display = 'block';
+                    showToast('QR Code generated! Customer can scan now.', 'success');
+                    
+                    // Start polling for status
+                    startStatusPolling();
+                    
+                } else {
+                    showToast(result.message || 'Failed to generate QR', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error generating QR code', 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '💰 Generate QR Code';
+            }
+        }
+        
+        async function checkStatus() {
+            if (!currentOrderId) return;
+            
+            try {
+                const response = await fetch(`/api/payment/status/${currentOrderId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const orderInfo = document.getElementById('orderInfo');
+                    const statusClass = result.data.status === 'SUCCESS' ? 'status-success' : 'status-pending';
+                    const statusText = result.data.statusText;
+                    
+                    orderInfo.innerHTML = `
+                        <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
+                        <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
+                        <p><span class="info-label">Status:</span> <span class="status-badge ${statusClass}">${statusText}</span></p>
+                    `;
+                    
+                    if (result.data.status === 'SUCCESS') {
+                        showToast('✅ Payment Successful!', 'success');
+                        stopStatusPolling();
+                        document.getElementById('generateBtn').disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+            }
+        }
+        
+        async function processMicroPay() {
+            const amount = document.getElementById('microAmount').value;
+            const authCode = document.getElementById('authCode').value;
+            const btn = event.target;
+            
+            if (!amount || amount <= 0) {
+                showToast('Please enter amount', 'error');
+                return;
+            }
+            
+            if (!authCode) {
+                showToast('Please scan or enter customer barcode', 'error');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+            
+            try {
+                const response = await fetch('/api/payment/micropay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: parseFloat(amount).toFixed(2),
+                        authCode: authCode,
+                        payWay: 'WXZF'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast(`✅ Payment Successful! Amount: S$${amount}`, 'success');
+                    document.getElementById('authCode').value = '';
+                    // Optionally print receipt here
+                } else {
+                    showToast(result.message || 'Payment failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('MicroPay error:', error);
+                showToast('Payment processing error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💳 Process Payment';
+            }
+        }
+        
+        function startStatusPolling() {
+            if (statusInterval) clearInterval(statusInterval);
+            statusInterval = setInterval(checkStatus, 3000);
+        }
+        
+        function stopStatusPolling() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+        }
+        
+        function resetQR() {
+            const qrContainer = document.getElementById('qrContainer');
+            qrContainer.innerHTML = `
+                <div class="qr-placeholder">
+                    <div class="qr-icon">📱</div>
+                    <p>Enter amount and click below</p>
+                    <p style="font-size: 12px; color: #999;">QR code will appear here</p>
+                </div>
+            `;
+            document.getElementById('orderInfo').classList.remove('show');
+            document.getElementById('checkStatusBtn').style.display = 'none';
+            stopStatusPolling();
+            currentOrderId = null;
+        }
+        
+        function getPaywayName(payway) {
+            const names = {
+                'WXZF': 'WeChat Pay',
+                'ZFBZF': 'Alipay',
+                'PayNowPay': 'PayNow',
+                'GrabPay': 'GrabPay'
+            };
+            return names[payway] || payway;
+        }
+        
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
+</body>
+</html>
