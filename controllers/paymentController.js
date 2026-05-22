@@ -99,11 +99,15 @@ exports.checkOrderStatus = async (req, res) => {
         // Query YeahPay for latest status
         const result = await yeahpayService.queryOrder(orderId);
         
+        console.log('📊 Query Result:', JSON.stringify(result, null, 2));
+        
         let status = 'PENDING';
         let statusText = 'Waiting for payment';
         
         if (result.code === '0' || result.code === 0) {
             const paymentStatus = result.data?.status;
+            
+            console.log('💰 Payment Status from YeahPay:', paymentStatus);
             
             // Status mapping based on API.pdf
             switch (paymentStatus) {
@@ -129,7 +133,7 @@ exports.checkOrderStatus = async (req, res) => {
                     break;
                 default:
                     status = 'UNKNOWN';
-                    statusText = 'Unknown status';
+                    statusText = 'Unknown status - ' + paymentStatus;
             }
             
             // Update local order status
@@ -138,6 +142,9 @@ exports.checkOrderStatus = async (req, res) => {
                 order.paidAt = new Date();
                 order.payTime = result.data?.payTime;
             }
+            
+            // IMPORTANT: Save the updated order back to Map
+            orders.set(orderId, order);
         }
         
         return res.json({
@@ -160,7 +167,21 @@ exports.checkOrderStatus = async (req, res) => {
         });
     }
 };
-
+exports.getAllOrders = async (req, res) => {
+    try {
+        const allOrders = Array.from(orders.values());
+        return res.json({
+            success: true,
+            data: allOrders,
+            count: allOrders.length
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 /**
  * Process Micro Pay (cashier scans customer code)
  * POST /api/payment/micropay

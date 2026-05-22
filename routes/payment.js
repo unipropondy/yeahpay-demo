@@ -20,4 +20,6 @@ router.post('/refund', paymentController.refundOrder);
 // Get order details
 router.get('/order/:orderId', paymentController.getOrder);
 
+router.get('/orders', paymentController.getAllOrders);
+
 module.exports = router;

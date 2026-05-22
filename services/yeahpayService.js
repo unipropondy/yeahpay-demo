@@ -42,12 +42,12 @@ class YeahPayService {
     const urlPath = '/acceptance-open-api/order/unifiedOrder';
     const apiEndpoint = '/order/unifiedOrder';
     const fullUrl = this.baseURL.replace(/\/$/, '') + apiEndpoint;
-    
+    const amountInCents = Math.round(parseFloat(amount) * 100);
     const requestBody = {
         payWay: payWay,
         merchantId: this.merchantId,
         thirdOrderId: orderId,
-       amount: "100",
+       amount: amountInCents.toString(),
         currency: 'SGD',
         jspayFlag: 'NATIVE'
     };
@@ -106,54 +106,68 @@ class YeahPayService {
     
 
     async queryOrder(thirdOrderId) {
-        if (this.mockMode) {
+    if (this.mockMode) {
+        return {
+            code: '0',
+            msg: 'success',
+            data: { status: 2 }
+        };
+    }
+
+    const urlPath = '/acceptance-open-api/order/queryOrder';
+    const apiEndpoint = '/order/queryOrder';
+    const fullUrl = this.baseURL.replace(/\/$/, '') + apiEndpoint;
+    
+    const requestBody = {
+        merchantId: this.merchantId,
+        thirdOrderId: thirdOrderId
+    };
+
+    const timestamp = Date.now().toString();
+    const version = '1.0';
+    const nonce = this.generateNonce(16);
+    
+    const signature = this.generateSignature(
+        urlPath,
+        this.appId,
+        timestamp,
+        version,
+        nonce,
+        JSON.stringify(requestBody),
+        this.apiKey
+    );
+
+    const headers = {
+        'Content-Type': 'application/json',
+        'appId': this.appId,
+        'timestamp': timestamp,
+        'version': version,
+        'nonce': nonce,
+        'algorithm': 'SHA-512',
+        'signature': signature
+    };
+
+    try {
+        const response = await axios.post(fullUrl, requestBody, { headers });
+        console.log('📊 Query Response:', JSON.stringify(response.data, null, 2));
+        
+        // Return in consistent format
+        if (response.data.code === 0 || response.data.code === '0') {
             return {
                 code: '0',
-                msg: 'success',
-                data: { status: 2 }
+                data: {
+                    status: response.data.data?.status || 0,
+                    payTime: response.data.data?.payTime,
+                    amount: response.data.data?.amount
+                }
             };
         }
-
-        const urlPath = '/acceptance-open-api/order/queryOrder';
-        const apiEndpoint = '/order/queryOrder';
-        const fullUrl = this.baseURL.replace(/\/$/, '') + apiEndpoint;
-        
-        const requestBody = {
-            merchantId: this.merchantId,
-            thirdOrderId: thirdOrderId
-        };
-
-        const timestamp = Date.now().toString();
-        const version = '1.0';
-        const nonce = this.generateNonce(16);
-        
-        const signature = this.generateSignature(
-            urlPath,
-            this.appId,
-            timestamp,
-            version,
-            nonce,
-            JSON.stringify(requestBody),
-            this.apiKey
-        );
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'appId': this.appId,
-            'timestamp': timestamp,
-            'version': version,
-            'nonce': nonce,
-            'algorithm': 'SHA-512',
-            'signature': signature
-        };
-
-        try {
-            const response = await axios.post(fullUrl, requestBody, { headers });
-            return response.data;
-        } catch (error) {
-            return { code: '500', msg: error.message };
-        }
+        return response.data;
+    } catch (error) {
+        console.error('❌ Query Error:', error.response?.data || error.message);
+        return { code: '500', msg: error.message };
     }
+}
 }
 
 module.exports = new YeahPayService();
