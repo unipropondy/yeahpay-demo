@@ -96,7 +96,6 @@ exports.checkOrderStatus = async (req, res) => {
             });
         }
         
-        // Query YeahPay for latest status
         const result = await yeahpayService.queryOrder(orderId);
         
         console.log('📊 Query Result:', JSON.stringify(result, null, 2));
@@ -104,48 +103,44 @@ exports.checkOrderStatus = async (req, res) => {
         let status = 'PENDING';
         let statusText = 'Waiting for payment';
         
-        if (result.code === '0' || result.code === 0) {
-            const paymentStatus = result.data?.status;
-            
-            console.log('💰 Payment Status from YeahPay:', paymentStatus);
-            
-            // Status mapping based on API.pdf
-            switch (paymentStatus) {
-                case 0:
-                    status = 'PENDING';
-                    statusText = 'Waiting for payment';
-                    break;
-                case 2:
-                    status = 'SUCCESS';
-                    statusText = 'Payment successful!';
-                    break;
-                case 6:
-                    status = 'CLOSED';
-                    statusText = 'Order closed';
-                    break;
-                case 8:
-                    status = 'FAILED';
-                    statusText = 'Payment failed';
-                    break;
-                case 11:
-                    status = 'REFUNDED';
-                    statusText = 'Refunded';
-                    break;
-                default:
-                    status = 'UNKNOWN';
-                    statusText = 'Unknown status - ' + paymentStatus;
-            }
-            
-            // Update local order status
-            order.status = status;
-            if (status === 'SUCCESS') {
-                order.paidAt = new Date();
-                order.payTime = result.data?.payTime;
-            }
-            
-            // IMPORTANT: Save the updated order back to Map
-            orders.set(orderId, order);
+        // Handle different response structures
+        const paymentStatus = result.data?.status || result.data?.data?.status;
+        const paymentStatusStr = String(paymentStatus);
+        
+        console.log('💰 Payment Status from YeahPay:', paymentStatusStr);
+        
+        switch (paymentStatusStr) {
+            case '0':
+                status = 'PENDING';
+                statusText = 'Waiting for payment';
+                break;
+            case '2':
+                status = 'SUCCESS';
+                statusText = 'Payment successful!';
+                break;
+            case '6':
+                status = 'CLOSED';
+                statusText = 'Order closed';
+                break;
+            case '8':
+                status = 'FAILED';
+                statusText = 'Payment failed';
+                break;
+            case '11':
+                status = 'REFUNDED';
+                statusText = 'Refunded';
+                break;
+            default:
+                status = 'UNKNOWN';
+                statusText = 'Unknown status - ' + paymentStatusStr;
         }
+        
+        order.status = status;
+        if (status === 'SUCCESS') {
+            order.paidAt = new Date();
+            order.payTime = result.data?.payTime;
+        }
+        orders.set(orderId, order);
         
         return res.json({
             success: true,

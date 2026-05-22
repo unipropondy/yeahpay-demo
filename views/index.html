@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>YeahPay Payment Gateway - Demo</title>
+    <title>YeahPay - Payment Gateway</title>
+    <link rel="icon" href="https://www.yeahpay.sg/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -13,7 +14,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,67 +24,50 @@
             margin: 0 auto;
         }
         
-        /* Mode Toggle */
-        .mode-toggle {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px;
-            border-radius: 60px;
-        }
-        
-        .mode-btn {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: transparent;
-            color: white;
-        }
-        
-        .mode-btn.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        .card {
-            background: white;
-            border-radius: 32px;
-            padding: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            margin-bottom: 20px;
-        }
-        
+        /* Header */
         .header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
+            padding: 20px 0;
         }
         
         .logo {
-            font-size: 56px;
-            margin-bottom: 12px;
+            font-size: 48px;
+            margin-bottom: 8px;
         }
         
-        h1 {
-            font-size: 24px;
-            color: #1a1a2e;
-            margin-bottom: 6px;
-        }
-        
-        .subtitle {
+        .company-name {
+            font-size: 14px;
             color: #666;
-            font-size: 13px;
+            letter-spacing: 1px;
         }
         
+        .company-name strong {
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+        
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        /* Amount Section */
         .amount-section {
             background: #f8f9fc;
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 24px;
             margin-bottom: 24px;
             text-align: center;
@@ -115,15 +99,16 @@
             background: transparent;
             width: 200px;
             text-align: center;
-            color: #667eea;
+            color: #1a1a2e;
             outline: none;
             font-family: monospace;
         }
         
         .amount-input input:focus {
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #1a1a2e;
         }
         
+        /* Payment Methods */
         .payway-select {
             margin-top: 16px;
             display: flex;
@@ -133,8 +118,8 @@
         }
         
         .payway-option {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
+            padding: 8px 20px;
+            border: 1px solid #e0e0e0;
             border-radius: 40px;
             background: white;
             cursor: pointer;
@@ -143,17 +128,17 @@
         }
         
         .payway-option.selected {
-            background: #667eea;
+            background: #1a1a2e;
             color: white;
-            border-color: #667eea;
+            border-color: #1a1a2e;
         }
         
+        /* QR Container */
         .qr-container {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
+            background: #fafafa;
+            border-radius: 20px;
+            padding: 32px;
             text-align: center;
-            border: 2px dashed #e5e7eb;
             margin-bottom: 24px;
             min-height: 280px;
             display: flex;
@@ -168,6 +153,7 @@
         .qr-icon {
             font-size: 64px;
             margin-bottom: 12px;
+            opacity: 0.5;
         }
         
         .qr-code {
@@ -178,12 +164,12 @@
             width: 200px;
             height: 200px;
             border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
         }
         
+        /* Order Info */
         .order-info {
-            background: #f0fdf4;
-            border-radius: 20px;
+            background: #f8f9fc;
+            border-radius: 16px;
             padding: 16px;
             margin-bottom: 20px;
             font-size: 13px;
@@ -195,32 +181,34 @@
         }
         
         .order-info p {
-            margin: 6px 0;
-            color: #166534;
+            margin: 8px 0;
+            color: #333;
         }
         
         .info-label {
             font-weight: 600;
             width: 100px;
             display: inline-block;
+            color: #666;
         }
         
+        /* Buttons */
         .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1a1a2e;
             border: none;
             color: white;
             padding: 16px 24px;
-            border-radius: 60px;
+            border-radius: 50px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.4);
+            background: #2d2d44;
+            transform: translateY(-1px);
         }
         
         .btn-primary:disabled {
@@ -230,11 +218,11 @@
         }
         
         .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-            border: none;
+            background: transparent;
+            color: #666;
+            border: 1px solid #e0e0e0;
             padding: 12px 20px;
-            border-radius: 40px;
+            border-radius: 50px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -242,6 +230,11 @@
             width: 100%;
         }
         
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+        
+        /* Status Badge */
         .status-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -250,22 +243,91 @@
             font-weight: 600;
         }
         
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-success { background: #d1fae5; color: #065f46; }
-        .status-failed { background: #fee2e2; color: #991b1b; }
+        .status-pending { background: #fff3e0; color: #e67e22; }
+        .status-success { background: #e8f5e9; color: #2e7d32; }
         
+        /* Modal Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .modal-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        
+        .modal-message {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        
+        .modal-btn {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Toast */
         .toast {
             position: fixed;
             bottom: 30px;
             left: 20px;
             right: 20px;
-            background: #1f2937;
+            background: #1a1a2e;
             color: white;
             padding: 14px 20px;
-            border-radius: 60px;
+            border-radius: 50px;
             text-align: center;
             font-size: 14px;
-            z-index: 1000;
+            z-index: 1001;
             transform: translateY(100px);
             transition: transform 0.3s;
         }
@@ -273,55 +335,43 @@
         .toast.show {
             transform: translateY(0);
         }
+        .logo-link {
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+        .toast.success { background: #2e7d32; }
+        .toast.error { background: #c62828; }
         
-        .toast.success { background: #059669; }
-        .toast.error { background: #dc2626; }
-        
-        .micro-pay-section {
-            display: none;
-        }
-        
-        .micro-pay-section.show {
-            display: block;
-        }
-        
-        .auth-code-input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            font-size: 16px;
+        /* Footer */
+        .footer {
             text-align: center;
-            letter-spacing: 2px;
-            font-family: monospace;
-            margin-bottom: 16px;
-        }
-        
-        @media (max-width: 480px) {
-            .card {
-                padding: 24px;
-            }
-            .amount-input input {
-                font-size: 40px;
-                width: 150px;
-            }
+            font-size: 11px;
+            color: #999;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="mode-toggle">
-            <button class="mode-btn active" onclick="setMode('scan')">📱 Customer Scan QR</button>
-            <button class="mode-btn" onclick="setMode('micro')">📷 Cashier Scan Code</button>
-        </div>
+        <!-- Header -->
+       <div class="header">
+    <a href="https://www.yeahpay.sg" target="_blank" class="logo-link">
+        <img src="https://www.yeahpay.sg/favicon.ico" alt="YeahPay" class="logo-img">
+    </a>
+    <div class="company-name">
+        <strong>YEAHPAY SINGAPORE PTE LTD</strong>
+    </div>
+</div>
         
-        <!-- Master Scan Mode - Customer Scans QR -->
-        <div id="scanMode" class="card">
-            <div class="header">
-                <div class="logo">💳</div>
-                <h1>YeahPay Payment</h1>
-                <p class="subtitle">Customer scans QR code to pay</p>
-            </div>
+        <!-- Payment Card -->
+        <div class="card">
+            <div class="card-title">Payment Gateway</div>
             
             <div class="amount-section">
                 <div class="amount-label">Payment Amount</div>
@@ -330,57 +380,45 @@
                     <input type="number" id="amount" value="1.00" step="0.01" min="0.01">
                 </div>
                 <div class="payway-select">
-                    <div class="payway-option selected" data-payway="WXZF">🇨🇳 WeChat</div>
-                    <div class="payway-option" data-payway="ZFBZF">🇨🇳 Alipay</div>
-                    <div class="payway-option" data-payway="PayNowPay">🇸🇬 PayNow</div>
-                    <div class="payway-option" data-payway="GrabPay">🚗 GrabPay</div>
+                    <div class="payway-option selected" data-payway="WXZF">WeChat</div>
+                    <div class="payway-option" data-payway="ZFBZF">Alipay</div>
+                    <div class="payway-option" data-payway="PayNowPay">PayNow</div>
+                    <div class="payway-option" data-payway="GrabPay">GrabPay</div>
                 </div>
             </div>
             
             <div class="qr-container" id="qrContainer">
                 <div class="qr-placeholder">
                     <div class="qr-icon">📱</div>
-                    <p>Enter amount and click below</p>
-                    <p style="font-size: 12px; color: #999;">QR code will appear here</p>
+                    <p style="color: #999;">Enter amount and generate QR</p>
                 </div>
             </div>
             
             <div id="orderInfo" class="order-info"></div>
             
             <button class="btn-primary" id="generateBtn" onclick="generateQR()">
-                💰 Generate QR Code
-            </button>
-            <button class="btn-secondary" id="checkStatusBtn" onclick="checkStatus()" style="display: none;">
-                🔄 Check Payment Status
+                Generate QR Code
             </button>
         </div>
         
-        <!-- Micro Pay Mode - Cashier Scans Customer Code -->
-        <div id="microMode" class="card" style="display: none;">
-            <div class="header">
-                <div class="logo">📷</div>
-                <h1>Scan Customer Code</h1>
-                <p class="subtitle">Use scanner to read customer's payment barcode</p>
-            </div>
-            
-            <div class="amount-section">
-                <div class="amount-label">Payment Amount</div>
-                <div class="amount-input">
-                    <span class="currency">S$</span>
-                    <input type="number" id="microAmount" value="1.00" step="0.01" min="0.01">
-                </div>
-            </div>
-            
-            <input type="text" id="authCode" class="auth-code-input" placeholder="Scan or enter customer barcode code" autocomplete="off">
-            
-            <button class="btn-primary" onclick="processMicroPay()">
-                💳 Process Payment
-            </button>
+        <div class="footer">
+            Secure payment powered by YeahPay
+        </div>
+    </div>
+    
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <div class="modal-title">Payment Successful!</div>
+            <div class="modal-message" id="modalMessage">Your payment has been completed successfully.</div>
+            <button class="modal-btn" onclick="closeModal()">Close</button>
         </div>
     </div>
     
     <div id="toast" class="toast"></div>
     
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
     <script>
         let currentOrderId = null;
         let statusInterval = null;
@@ -395,26 +433,6 @@
             });
         });
         
-        function setMode(mode) {
-            const scanMode = document.getElementById('scanMode');
-            const microMode = document.getElementById('microMode');
-            const btns = document.querySelectorAll('.mode-btn');
-            
-            btns.forEach(btn => btn.classList.remove('active'));
-            
-            if (mode === 'scan') {
-                scanMode.style.display = 'block';
-                microMode.style.display = 'none';
-                btns[0].classList.add('active');
-                // Reset QR
-                resetQR();
-            } else {
-                scanMode.style.display = 'none';
-                microMode.style.display = 'block';
-                btns[1].classList.add('active');
-            }
-        }
-        
         async function generateQR() {
             const amount = document.getElementById('amount').value;
             const generateBtn = document.getElementById('generateBtn');
@@ -425,7 +443,7 @@
             }
             
             generateBtn.disabled = true;
-            generateBtn.textContent = '⏳ Generating...';
+            generateBtn.textContent = 'Generating...';
             
             try {
                 const response = await fetch('/api/payment/generate-qr', {
@@ -438,41 +456,23 @@
                 });
                 
                 const result = await response.json();
-                console.log('Response:', result);
                 
                 if (result.success) {
                     currentOrderId = result.data.orderId;
                     
-                    // Display QR code
                     const qrContainer = document.getElementById('qrContainer');
                     if (result.data.qrBase64) {
                         qrContainer.innerHTML = `
                             <div class="qr-code">
                                 <img src="${result.data.qrBase64}" alt="QR Code">
                                 <p style="margin-top: 16px; font-size: 13px; color: #666;">
-                                    Have customer scan with ${getPaywayName(currentPayway)}
+                                    Scan with ${getPaywayName(currentPayway)}
                                 </p>
                                 <p style="font-size: 11px; color: #999;">Amount: S$${result.data.amount}</p>
                             </div>
                         `;
-                    } else if (result.data.qrUrl) {
-                        qrContainer.innerHTML = `
-                            <div class="qr-code">
-                                <div id="tempQr"></div>
-                                <p style="margin-top: 16px; font-size: 13px; color: #666;">
-                                    Have customer scan with ${getPaywayName(currentPayway)}
-                                </p>
-                            </div>
-                        `;
-                        // Generate QR from URL
-                        const QRCodeLib = new QRCode(document.getElementById("tempQr"), {
-                            text: result.data.qrUrl,
-                            width: 200,
-                            height: 200
-                        });
                     }
                     
-                    // Show order info
                     const orderInfo = document.getElementById('orderInfo');
                     orderInfo.innerHTML = `
                         <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
@@ -482,10 +482,7 @@
                     `;
                     orderInfo.classList.add('show');
                     
-                    document.getElementById('checkStatusBtn').style.display = 'block';
                     showToast('QR Code generated! Customer can scan now.', 'success');
-                    
-                    // Start polling for status
                     startStatusPolling();
                     
                 } else {
@@ -497,7 +494,7 @@
                 showToast('Error generating QR code', 'error');
             } finally {
                 generateBtn.disabled = false;
-                generateBtn.textContent = '💰 Generate QR Code';
+                generateBtn.textContent = 'Generate QR Code';
             }
         }
         
@@ -510,19 +507,19 @@
                 
                 if (result.success) {
                     const orderInfo = document.getElementById('orderInfo');
-                    const statusClass = result.data.status === 'SUCCESS' ? 'status-success' : 'status-pending';
-                    const statusText = result.data.statusText;
+                    let statusClass = result.data.status === 'SUCCESS' ? 'status-success' : 'status-pending';
                     
                     orderInfo.innerHTML = `
                         <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
                         <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
-                        <p><span class="info-label">Status:</span> <span class="status-badge ${statusClass}">${statusText}</span></p>
+                        <p><span class="info-label">Status:</span> <span class="status-badge ${statusClass}">${result.data.statusText}</span></p>
+                        ${result.data.paidAt ? `<p><span class="info-label">Paid At:</span> ${new Date(result.data.paidAt).toLocaleString()}</p>` : ''}
                     `;
                     
                     if (result.data.status === 'SUCCESS') {
-                        showToast('✅ Payment Successful!', 'success');
                         stopStatusPolling();
                         document.getElementById('generateBtn').disabled = false;
+                        showSuccessModal(result.data.amount);
                     }
                 }
             } catch (error) {
@@ -530,52 +527,17 @@
             }
         }
         
-        async function processMicroPay() {
-            const amount = document.getElementById('microAmount').value;
-            const authCode = document.getElementById('authCode').value;
-            const btn = event.target;
-            
-            if (!amount || amount <= 0) {
-                showToast('Please enter amount', 'error');
-                return;
-            }
-            
-            if (!authCode) {
-                showToast('Please scan or enter customer barcode', 'error');
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = '⏳ Processing...';
-            
-            try {
-                const response = await fetch('/api/payment/micropay', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        amount: parseFloat(amount).toFixed(2),
-                        authCode: authCode,
-                        payWay: 'WXZF'
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(`✅ Payment Successful! Amount: S$${amount}`, 'success');
-                    document.getElementById('authCode').value = '';
-                    // Optionally print receipt here
-                } else {
-                    showToast(result.message || 'Payment failed', 'error');
-                }
-                
-            } catch (error) {
-                console.error('MicroPay error:', error);
-                showToast('Payment processing error', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '💳 Process Payment';
-            }
+        function showSuccessModal(amount) {
+            const modal = document.getElementById('successModal');
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = `Amount S$${amount} has been paid successfully.`;
+            modal.classList.add('show');
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+            resetQR();
         }
         
         function startStatusPolling() {
@@ -595,12 +557,10 @@
             qrContainer.innerHTML = `
                 <div class="qr-placeholder">
                     <div class="qr-icon">📱</div>
-                    <p>Enter amount and click below</p>
-                    <p style="font-size: 12px; color: #999;">QR code will appear here</p>
+                    <p style="color: #999;">Enter amount and generate QR</p>
                 </div>
             `;
             document.getElementById('orderInfo').classList.remove('show');
-            document.getElementById('checkStatusBtn').style.display = 'none';
             stopStatusPolling();
             currentOrderId = null;
         }
@@ -624,6 +584,5 @@
             }, 3000);
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
 </body>
 </html>
