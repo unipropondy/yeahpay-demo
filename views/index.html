@@ -580,25 +580,29 @@
         }
         
         // AUTO GENERATE QR ON PAGE LOAD
-        if (autoAmount && parseFloat(autoAmount) > 0) {
-            const waitForElements = setInterval(() => {
-                const qrContainer = document.getElementById('qrContainer');
-                if (qrContainer) {
-                    clearInterval(waitForElements);
-                    console.log("DOM ready, generating QR...");
-                    setTimeout(() => {
-                        generateQR();
-                    }, 500);
-                }
-            }, 100);
-            
+      // AUTO GENERATE QR ON PAGE LOAD - ONLY ONCE
+if (autoAmount && parseFloat(autoAmount) > 0) {
+    let generated = false;
+    const waitForElements = setInterval(() => {
+        const qrContainer = document.getElementById('qrContainer');
+        if (qrContainer && !generated) {
+            clearInterval(waitForElements);
+            generated = true;
+            console.log("DOM ready, generating QR...");
             setTimeout(() => {
-                clearInterval(waitForElements);
-                if (document.getElementById('qrContainer')) {
-                    generateQR();
-                }
-            }, 5000);
+                generateQR();
+            }, 500);
         }
+    }, 100);
+    
+    // Fallback - only if not generated after 5 seconds
+    setTimeout(() => {
+        if (!generated && document.getElementById('qrContainer')) {
+            generated = true;
+            generateQR();
+        }
+    }, 5000);
+}
     </script>
 </body>
 </html>
