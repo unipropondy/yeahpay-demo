@@ -30,15 +30,11 @@
             padding: 20px 0;
         }
         
-        .logo {
-            font-size: 48px;
-            margin-bottom: 8px;
-        }
-        
         .company-name {
             font-size: 14px;
             color: #666;
             letter-spacing: 1px;
+            margin-top: 8px;
         }
         
         .company-name strong {
@@ -188,28 +184,10 @@
             color: #666;
         }
         
-        .btn-primary {
-            width: 100%;
-            background: #1a1a2e;
-            border: none;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background: #2d2d44;
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+            color: #666;
         }
         
         .status-badge {
@@ -311,11 +289,6 @@
             transform: translateY(0);
         }
         
-        .logo-link {
-            display: inline-block;
-            margin-bottom: 8px;
-        }
-        
         .logo-img {
             width: 48px;
             height: 48px;
@@ -346,47 +319,39 @@
 <body>
     <div class="container">
         <div class="header">
-            <a href="https://www.yeahpay.sg" target="_blank" class="logo-link">
-                <img src="https://www.yeahpay.sg/favicon.ico" alt="YeahPay" class="logo-img">
-            </a>
+            <img src="https://www.yeahpay.sg/favicon.ico" alt="YeahPay" class="logo-img">
             <div class="company-name">
                 <strong>YEAHPAY SINGAPORE PTE LTD</strong>
             </div>
         </div>
         
         <div class="card">
-    <div class="card-title">Payment Gateway</div>
-    
-    <div class="amount-section">
-        <div class="amount-label">Payment Amount</div>
-        <div class="amount-input">
-            <span class="currency">S$</span>
-            <input type="number" id="amount" value="1.00" step="0.01" min="0.01" readonly>
+            <div class="card-title">Payment Gateway</div>
+            
+            <div class="amount-section">
+                <div class="amount-label">Payment Amount</div>
+                <div class="amount-input">
+                    <span class="currency">S$</span>
+                    <input type="number" id="amount" value="1.00" step="0.01" min="0.01" readonly>
+                </div>
+                <div class="payway-select">
+                    <div class="payway-option selected" data-payway="PayNowPay">PayNow</div>
+                    <div class="payway-option" data-payway="WXZF">WeChat</div>
+                    <div class="payway-option" data-payway="ZFBZF">Alipay</div>
+                    <div class="payway-option" data-payway="GrabPay">GrabPay</div>
+                </div>
+            </div>
+            
+            <div class="qr-container" id="qrContainer">
+                <div class="qr-placeholder">
+                    <div class="qr-icon">📱</div>
+                    <p style="color: #999;">Loading QR code...</p>
+                </div>
+            </div>
+            
+            <div id="orderInfo" class="order-info"></div>
+            <div id="infoNote" class="info-note" style="display: none;"></div>
         </div>
-        <div class="payway-select">
-            <div class="payway-option selected" data-payway="PayNowPay">PayNow</div>
-            <div class="payway-option" data-payway="WXZF">WeChat</div>
-            <div class="payway-option" data-payway="ZFBZF">Alipay</div>
-            <div class="payway-option" data-payway="GrabPay">GrabPay</div>
-        </div>
-    </div>
-    
-    <!-- ✅ ADD THIS QR CONTAINER -->
-    <div class="qr-container" id="qrContainer">
-        <div class="qr-placeholder">
-            <div class="qr-icon">📱</div>
-            <p style="color: #999;">QR code will appear here</p>
-        </div>
-    </div>
-    
-    <div id="orderInfo" class="order-info"></div>
-    
-    <button class="btn-primary" id="generateBtn" onclick="generateQR()">
-        Generate QR Code
-    </button>
-    
-    <div id="infoNote" class="info-note" style="display: none;"></div>
-</div>
         
         <div class="footer">
             Secure payment powered by YeahPay
@@ -406,81 +371,70 @@
     
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
     <script>
-  let currentOrderId = null;
-    let statusInterval = null;
-    let currentPayway = 'PayNowPay';  // Default to PayNow for demo
-    let isFromParent = false;
-    
-    // ========== READ URL PARAMETERS (FIXED) ==========
-    const urlParams = new URLSearchParams(window.location.search);
-    const autoAmount = urlParams.get('amount');      // ← Use same variable name
-    const autoOrderId = urlParams.get('orderId');    // ← Use same variable name
-    isFromParent = urlParams.get('from') === 'pos';
-    
-    console.log("Amount from URL:", autoAmount);
-    console.log("OrderId from URL:", autoOrderId);
-    
-    // Auto-fill amount from URL
-    if (autoAmount && !isNaN(parseFloat(autoAmount))) {
-        const amountInput = document.getElementById('amount');
-        amountInput.value = parseFloat(autoAmount).toFixed(2);
-        amountInput.readOnly = true;
+        let currentOrderId = null;
+        let statusInterval = null;
+        let currentPayway = 'PayNowPay';
+        let isFromParent = false;
+        let isLoading = false;
         
-        // Show info note
-        const infoNote = document.getElementById('infoNote');
-        if (infoNote) {
-            infoNote.style.display = 'block';
-            infoNote.innerHTML = `💰 Amount S$${parseFloat(autoAmount).toFixed(2)} from your order. Click "Generate QR Code" to pay.`;
+        // READ URL PARAMETERS
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoAmount = urlParams.get('amount');
+        const autoOrderId = urlParams.get('orderId');
+        isFromParent = urlParams.get('from') === 'pos';
+        
+        console.log("Amount from URL:", autoAmount);
+        console.log("OrderId from URL:", autoOrderId);
+        
+        // Set amount field
+        if (autoAmount && !isNaN(parseFloat(autoAmount))) {
+            const amountField = document.getElementById('amount');
+            amountField.value = parseFloat(autoAmount).toFixed(2);
+            amountField.readOnly = true;
+            console.log("Amount set to:", amountField.value);
         }
-    }
-    
-    if (autoOrderId) {
-        currentOrderId = autoOrderId;
-        console.log("Current Order ID set to:", currentOrderId);
-    }
-    
-    // Payway selection
-    document.querySelectorAll('.payway-option').forEach(opt => {
-        opt.addEventListener('click', function() {
-            document.querySelectorAll('.payway-option').forEach(o => o.classList.remove('selected'));
-            this.classList.add('selected');
-            currentPayway = this.dataset.payway;
+        
+        if (autoOrderId) {
+            currentOrderId = autoOrderId;
+            console.log("Order ID set to:", currentOrderId);
+        }
+        
+        // Payway selection - Auto regenerate QR when changed
+        document.querySelectorAll('.payway-option').forEach(opt => {
+            opt.addEventListener('click', function() {
+                if (isLoading) return;
+                document.querySelectorAll('.payway-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                currentPayway = this.dataset.payway;
+                console.log("Payment method changed to:", currentPayway);
+                // Auto regenerate QR
+                setTimeout(() => {
+                    generateQR();
+                }, 100);
+            });
         });
-    });
-    
-    // Auto-generate QR if amount is pre-filled
-   // Auto-generate QR - wait for DOM elements
-if (autoAmount && parseFloat(autoAmount) > 0) {
-    const waitForElements = setInterval(() => {
-        const qrContainer = document.getElementById('qrContainer');
-        const orderInfo = document.getElementById('orderInfo');
-        if (qrContainer && orderInfo) {
-            clearInterval(waitForElements);
-            console.log("DOM ready, generating QR...");
-            setTimeout(() => {
-                generateQR();
-            }, 500);
-        }
-    }, 100);
-    
-    setTimeout(() => {
-        clearInterval(waitForElements);
-        if (document.getElementById('qrContainer')) {
-            generateQR();
-        }
-    }, 5000);
-}
+        
         async function generateQR() {
+            if (isLoading) return;
+            isLoading = true;
+            
             const amount = document.getElementById('amount').value;
-            const generateBtn = document.getElementById('generateBtn');
+            const qrContainer = document.getElementById('qrContainer');
+            const orderInfo = document.getElementById('orderInfo');
             
             if (!amount || amount <= 0) {
                 showToast('Please enter a valid amount', 'error');
+                isLoading = false;
                 return;
             }
             
-            generateBtn.disabled = true;
-            generateBtn.textContent = 'Processing...';
+            // Show loading
+            qrContainer.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="qr-icon">⏳</div>
+                    <p>Generating QR Code...</p>
+                </div>
+            `;
             
             try {
                 const response = await fetch('/api/payment/generate-qr', {
@@ -494,14 +448,10 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
                 
                 const result = await response.json();
                 
-                if (result.data?.isCardPayment && result.data?.paymentUrl) {
-                    window.location.href = result.data.paymentUrl;
-                    return;
-                }
-                
                 if (result.success) {
                     currentOrderId = result.data.orderId;
-                    document.getElementById('qrContainer').innerHTML = `
+                    
+                    qrContainer.innerHTML = `
                         <div class="qr-code">
                             <img src="${result.data.qrBase64}" alt="QR Code">
                             <p style="margin-top: 16px; font-size: 13px; color: #666;">
@@ -511,7 +461,6 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
                         </div>
                     `;
                     
-                    const orderInfo = document.getElementById('orderInfo');
                     orderInfo.innerHTML = `
                         <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
                         <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
@@ -522,17 +471,26 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
                     
                     showToast('QR Code generated! Customer can scan now.', 'success');
                     startStatusPolling();
-                    
                 } else {
                     showToast(result.message || 'Failed to generate payment', 'error');
+                    qrContainer.innerHTML = `
+                        <div class="qr-placeholder">
+                            <div class="qr-icon">❌</div>
+                            <p style="color: #999;">Failed to generate QR. Please refresh.</p>
+                        </div>
+                    `;
                 }
-                
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Error generating payment', 'error');
+                qrContainer.innerHTML = `
+                    <div class="qr-placeholder">
+                        <div class="qr-icon">❌</div>
+                        <p style="color: #999;">Error. Please refresh.</p>
+                    </div>
+                `;
             } finally {
-                generateBtn.disabled = false;
-                generateBtn.textContent = 'Generate QR Code';
+                isLoading = false;
             }
         }
         
@@ -556,9 +514,8 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
                     
                     if (result.data.status === 'SUCCESS') {
                         stopStatusPolling();
-                        document.getElementById('generateBtn').disabled = false;
                         
-                        // Notify parent window (POS app) about payment success
+                        // Notify parent window (POS app)
                         if (window.opener && isFromParent) {
                             window.opener.postMessage({
                                 type: 'YEAHPAY_PAYMENT_SUCCESS',
@@ -586,12 +543,8 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
         function closeModal() {
             const modal = document.getElementById('successModal');
             modal.classList.remove('show');
-            
-            // Close this window if opened from parent
             if (window.opener && isFromParent) {
                 setTimeout(() => window.close(), 500);
-            } else {
-                resetQR();
             }
         }
         
@@ -607,28 +560,12 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
             }
         }
         
-        function resetQR() {
-            const qrContainer = document.getElementById('qrContainer');
-            if (qrContainer) {
-                qrContainer.innerHTML = `
-                    <div class="qr-placeholder">
-                        <div class="qr-icon">📱</div>
-                        <p style="color: #999;">Enter amount and generate QR</p>
-                    </div>
-                `;
-            }
-            document.getElementById('orderInfo')?.classList.remove('show');
-            stopStatusPolling();
-            currentOrderId = null;
-        }
-        
         function getPaywayName(payway) {
             const names = {
                 'WXZF': 'WeChat Pay',
                 'ZFBZF': 'Alipay',
                 'PayNowPay': 'PayNow',
-                'GrabPay': 'GrabPay',
-                'CARD': 'Credit/Debit Card'
+                'GrabPay': 'GrabPay'
             };
             return names[payway] || payway;
         }
@@ -640,6 +577,27 @@ if (autoAmount && parseFloat(autoAmount) > 0) {
             setTimeout(() => {
                 toast.classList.remove('show');
             }, 3000);
+        }
+        
+        // AUTO GENERATE QR ON PAGE LOAD
+        if (autoAmount && parseFloat(autoAmount) > 0) {
+            const waitForElements = setInterval(() => {
+                const qrContainer = document.getElementById('qrContainer');
+                if (qrContainer) {
+                    clearInterval(waitForElements);
+                    console.log("DOM ready, generating QR...");
+                    setTimeout(() => {
+                        generateQR();
+                    }, 500);
+                }
+            }, 100);
+            
+            setTimeout(() => {
+                clearInterval(waitForElements);
+                if (document.getElementById('qrContainer')) {
+                    generateQR();
+                }
+            }, 5000);
         }
     </script>
 </body>
