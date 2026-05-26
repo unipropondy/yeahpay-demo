@@ -6,332 +6,55 @@
     <title>YeahPay - Payment Gateway</title>
     <link rel="icon" href="https://www.yeahpay.sg/favicon.ico">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f5f5;
             min-height: 100vh;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-            padding: 20px 0;
-        }
-        
-        .logo-img {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-        }
-        
-        .company-name {
-            font-size: 14px;
-            color: #666;
-            letter-spacing: 1px;
-            margin-top: 8px;
-        }
-        
-        .company-name strong {
-            color: #1a1a2e;
-            font-weight: 600;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-        
-        .amount-section {
-            background: #f8f9fc;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-        
-        .amount-label {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-        
-        .amount-input {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .currency {
-            font-size: 32px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-        
-        .amount-input input {
-            font-size: 52px;
-            font-weight: 800;
-            border: none;
-            background: transparent;
-            width: 200px;
-            text-align: center;
-            color: #1a1a2e;
-            outline: none;
-            font-family: monospace;
-        }
-        
-        .amount-input input:read-only {
-            background: #f0f0f0;
-            border-radius: 12px;
-            color: #666;
-        }
-        
-        .payway-select {
-            margin-top: 16px;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .payway-option {
-            padding: 8px 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 40px;
-            background: white;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        
-        .payway-option.selected {
-            background: #1a1a2e;
-            color: white;
-            border-color: #1a1a2e;
-        }
-        
-        .qr-container {
-            background: #fafafa;
-            border-radius: 20px;
-            padding: 32px;
-            text-align: center;
-            margin-bottom: 24px;
-            min-height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .qr-placeholder {
-            text-align: center;
-        }
-        
-        .qr-icon {
-            font-size: 64px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
-        
-        .qr-code {
-            text-align: center;
-        }
-        
-        .qr-code img {
-            width: 200px;
-            height: 200px;
-            border-radius: 16px;
-        }
-        
-        .order-info {
-            background: #f8f9fc;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            display: none;
-        }
-        
-        .order-info.show {
-            display: block;
-        }
-        
-        .order-info p {
-            margin: 8px 0;
-            color: #333;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            width: 100px;
-            display: inline-block;
-            color: #666;
-        }
-        
-        .btn-primary {
-            width: 100%;
-            background: #1a1a2e;
-            border: none;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background: #2d2d44;
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 24px; padding: 20px 0; }
+        .logo-img { width: 48px; height: 48px; border-radius: 12px; }
+        .company-name { font-size: 14px; color: #666; letter-spacing: 1px; margin-top: 8px; }
+        .company-name strong { color: #1a1a2e; font-weight: 600; }
+        .card { background: white; border-radius: 24px; padding: 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-title { font-size: 18px; font-weight: 600; color: #1a1a2e; margin-bottom: 24px; text-align: center; }
+        .amount-section { background: #f8f9fc; border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: center; }
+        .amount-label { color: #666; font-size: 14px; margin-bottom: 12px; }
+        .amount-input { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+        .currency { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+        .amount-input input { font-size: 52px; font-weight: 800; border: none; background: transparent; width: 200px; text-align: center; color: #1a1a2e; outline: none; font-family: monospace; }
+        .amount-input input:read-only { background: #f0f0f0; border-radius: 12px; color: #666; }
+        .payway-select { margin-top: 16px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .payway-option { padding: 8px 20px; border: 1px solid #e0e0e0; border-radius: 40px; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        .payway-option.selected { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+        .qr-container { background: #fafafa; border-radius: 20px; padding: 32px; text-align: center; margin-bottom: 24px; min-height: 280px; display: flex; align-items: center; justify-content: center; }
+        .qr-placeholder { text-align: center; }
+        .qr-icon { font-size: 64px; margin-bottom: 12px; opacity: 0.5; }
+        .qr-code { text-align: center; }
+        .qr-code img { width: 200px; height: 200px; border-radius: 16px; }
+        .order-info { background: #f8f9fc; border-radius: 16px; padding: 16px; margin-bottom: 20px; font-size: 13px; display: none; }
+        .order-info.show { display: block; }
+        .order-info p { margin: 8px 0; color: #333; }
+        .info-label { font-weight: 600; width: 100px; display: inline-block; color: #666; }
+        .btn-primary { width: 100%; background: #1a1a2e; border: none; color: white; padding: 16px 24px; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-pending { background: #fff3e0; color: #e67e22; }
         .status-success { background: #e8f5e9; color: #2e7d32; }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 32px;
-            padding: 32px;
-            text-align: center;
-            max-width: 300px;
-            width: 90%;
-            animation: modalFadeIn 0.3s ease;
-        }
-        
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        
-        .modal-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-        
-        .modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 8px;
-        }
-        
-        .modal-message {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 24px;
-        }
-        
-        .modal-btn {
-            background: #1a1a2e;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 20px;
-            right: 20px;
-            background: #1a1a2e;
-            color: white;
-            padding: 14px 20px;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 14px;
-            z-index: 1001;
-            transform: translateY(100px);
-            transition: transform 0.3s;
-        }
-        
-        .toast.show {
-            transform: translateY(0);
-        }
-        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 32px; padding: 32px; text-align: center; max-width: 300px; width: 90%; }
+        .modal-icon { font-size: 64px; margin-bottom: 16px; }
+        .modal-title { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+        .modal-message { font-size: 14px; color: #666; margin-bottom: 24px; }
+        .modal-btn { background: #1a1a2e; color: white; border: none; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+        .toast { position: fixed; bottom: 30px; left: 20px; right: 20px; background: #1a1a2e; color: white; padding: 14px 20px; border-radius: 50px; text-align: center; font-size: 14px; z-index: 1001; transform: translateY(100px); transition: transform 0.3s; }
+        .toast.show { transform: translateY(0); }
         .toast.success { background: #2e7d32; }
         .toast.error { background: #c62828; }
-        
-        .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            padding: 20px;
-        }
-        
-        .info-note {
-            background: #e3f2fd;
-            border-radius: 12px;
-            padding: 10px;
-            margin-top: 15px;
-            font-size: 12px;
-            color: #1565c0;
-            text-align: center;
-        }
+        .footer { text-align: center; font-size: 11px; color: #999; padding: 20px; }
+        .info-note { background: #e3f2fd; border-radius: 12px; padding: 10px; margin-top: 15px; font-size: 12px; color: #1565c0; text-align: center; }
     </style>
 </head>
 <body>
@@ -360,6 +83,7 @@
                 </div>
             </div>
             
+            <!-- QR Container -->
             <div class="qr-container" id="qrContainer">
                 <div class="qr-placeholder">
                     <div class="qr-icon">📱</div>
@@ -367,7 +91,9 @@
                 </div>
             </div>
             
+            <!-- Order Info - IMPORTANT: This must exist! -->
             <div id="orderInfo" class="order-info"></div>
+            
             <div id="infoNote" class="info-note" style="display: none;"></div>
         </div>
         
@@ -394,7 +120,7 @@
         let currentPayway = 'PayNowPay';
         let isFromParent = false;
         
-        // ========== READ URL PARAMETERS ==========
+        // READ URL PARAMETERS
         const urlParams = new URLSearchParams(window.location.search);
         const autoAmount = urlParams.get('amount');
         const autoOrderId = urlParams.get('orderId');
@@ -449,7 +175,7 @@
                     currentOrderId = result.data.orderId;
                     
                     const qrContainer = document.getElementById('qrContainer');
-                    if (result.data.qrBase64) {
+                    if (qrContainer && result.data.qrBase64) {
                         qrContainer.innerHTML = `
                             <div class="qr-code">
                                 <img src="${result.data.qrBase64}" alt="QR Code">
@@ -462,13 +188,15 @@
                     }
                     
                     const orderInfo = document.getElementById('orderInfo');
-                    orderInfo.innerHTML = `
-                        <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
-                        <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
-                        <p><span class="info-label">Status:</span> <span class="status-badge status-pending">Waiting for payment</span></p>
-                        <p><span class="info-label">Payment Method:</span> ${getPaywayName(currentPayway)}</p>
-                    `;
-                    orderInfo.classList.add('show');
+                    if (orderInfo) {
+                        orderInfo.innerHTML = `
+                            <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
+                            <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
+                            <p><span class="info-label">Status:</span> <span class="status-badge status-pending">Waiting for payment</span></p>
+                            <p><span class="info-label">Payment Method:</span> ${getPaywayName(currentPayway)}</p>
+                        `;
+                        orderInfo.classList.add('show');
+                    }
                     
                     showToast('QR Code generated! Customer can scan now.', 'success');
                     startStatusPolling();
@@ -490,14 +218,15 @@
                 
                 if (result.success) {
                     const orderInfo = document.getElementById('orderInfo');
-                    let statusClass = result.data.status === 'SUCCESS' ? 'status-success' : 'status-pending';
-                    
-                    orderInfo.innerHTML = `
-                        <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
-                        <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
-                        <p><span class="info-label">Status:</span> <span class="status-badge ${statusClass}">${result.data.statusText}</span></p>
-                        ${result.data.paidAt ? `<p><span class="info-label">Paid At:</span> ${new Date(result.data.paidAt).toLocaleString()}</p>` : ''}
-                    `;
+                    if (orderInfo) {
+                        let statusClass = result.data.status === 'SUCCESS' ? 'status-success' : 'status-pending';
+                        orderInfo.innerHTML = `
+                            <p><span class="info-label">Order ID:</span> ${result.data.orderId}</p>
+                            <p><span class="info-label">Amount:</span> S$${result.data.amount}</p>
+                            <p><span class="info-label">Status:</span> <span class="status-badge ${statusClass}">${result.data.statusText}</span></p>
+                            ${result.data.paidAt ? `<p><span class="info-label">Paid At:</span> ${new Date(result.data.paidAt).toLocaleString()}</p>` : ''}
+                        `;
+                    }
                     
                     if (result.data.status === 'SUCCESS') {
                         stopStatusPolling();
@@ -522,13 +251,13 @@
         function showSuccessModal(amount) {
             const modal = document.getElementById('successModal');
             const modalMessage = document.getElementById('modalMessage');
-            modalMessage.textContent = `Amount S$${amount} has been paid successfully.`;
-            modal.classList.add('show');
+            if (modalMessage) modalMessage.textContent = `Amount S$${amount} has been paid successfully.`;
+            if (modal) modal.classList.add('show');
         }
         
         function closeModal() {
             const modal = document.getElementById('successModal');
-            modal.classList.remove('show');
+            if (modal) modal.classList.remove('show');
             if (window.opener && isFromParent) {
                 setTimeout(() => window.close(), 500);
             }
@@ -558,14 +287,16 @@
         
         function showToast(message, type) {
             const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `toast ${type} show`;
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+            if (toast) {
+                toast.textContent = message;
+                toast.className = `toast ${type} show`;
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
         }
         
-        // Auto-generate QR on page load if amount is present
+        // AUTO GENERATE QR ON PAGE LOAD
         if (autoAmount && parseFloat(autoAmount) > 0) {
             setTimeout(() => {
                 generateQR();
