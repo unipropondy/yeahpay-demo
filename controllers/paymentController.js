@@ -22,7 +22,39 @@ exports.generateQRPayment = async (req, res) => {
         // Generate unique order ID
         const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
         
-        // Call YeahPay API to create QR payment
+        // Handle CARD payment separately
+        if (payWay === 'CARD') {
+            const cardResult = await yeahpayService.createCardPayment(orderId, amount);
+            
+            if (cardResult.success) {
+                // Store order info
+                orders.set(orderId, {
+                    orderId,
+                    amount,
+                    payWay: 'CARD',
+                    status: 'PENDING',
+                    createdAt: new Date()
+                });
+                
+                return res.json({
+                    success: true,
+                    data: {
+                        orderId,
+                        amount,
+                        paymentUrl: cardResult.paymentUrl,
+                        isCardPayment: true,
+                        message: 'Redirect to payment page'
+                    }
+                });
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: cardResult.message || 'Failed to create card payment'
+                });
+            }
+        }
+        
+        // For QR payments (WXZF, ZFBZF, PayNowPay, GrabPay)
         const result = await yeahpayService.createMasterScanQR(
             orderId,
             amount,
@@ -32,16 +64,13 @@ exports.generateQRPayment = async (req, res) => {
         console.log('YeahPay Result:', JSON.stringify(result, null, 2));
         
         if (result.code === '0' || result.code === 0) {
-            // Get QR code URL from response
             const qrUrl = result.data?.code || result.data?.qrCode;
             
-            // Generate QR code image as base64
             let qrBase64 = null;
             if (qrUrl) {
                 qrBase64 = await QRCode.toDataURL(qrUrl);
             }
             
-            // Store order info
             orders.set(orderId, {
                 orderId,
                 amount,
@@ -79,7 +108,6 @@ exports.generateQRPayment = async (req, res) => {
         });
     }
 };
-
 /**
  * Check order status
  * GET /api/payment/status/:orderId

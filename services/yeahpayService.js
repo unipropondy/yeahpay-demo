@@ -33,7 +33,87 @@ class YeahPayService {
         console.log('🔐 Signature:', signature);
         return signature;
     }
+async createCardPayment(orderId, amount, cardDetails) {
+    if (this.mockMode) {
+        return {
+            code: '0',
+            msg: 'success',
+            data: {
+                paymentUrl: `https://mock.yeahpay.demo/card?orderId=${orderId}`
+            }
+        };
+    }
 
+    // For card payment, use H5 Cashier or direct charge
+    const urlPath = '/acceptance-open-api/cardOrder/getRedirectUrl';
+    const apiEndpoint = '/cardOrder/getRedirectUrl';
+    const fullUrl = this.baseURL.replace(/\/$/, '') + apiEndpoint;
+    
+    const amountInCents = Math.round(parseFloat(amount) * 100);
+    
+    const requestBody = {
+        merchantId: this.merchantId,
+        orderId: orderId,
+        merchantReferenceNumber: orderId,
+        busiType: 'PHYSICAL',
+        currency: 'SGD',
+        amount: amountInCents.toString(),
+        goodsList: JSON.stringify([{
+            name: "Product",
+            number: 1,
+            currency: "SGD",
+            amount: amountInCents
+        }]),
+        timestamp: Date.now().toString(),
+        callback: 'https://your-domain.com/callback',
+        payWay: 'ONLINE_CARD',  // For card payment
+        lang: 'en'
+    };
+    
+    const timestamp = Date.now().toString();
+    const version = '1.0';
+    const nonce = this.generateNonce(16);
+    
+    const signature = this.generateSignature(
+        urlPath,
+        this.appId,
+        timestamp,
+        version,
+        nonce,
+        JSON.stringify(requestBody),
+        this.apiKey
+    );
+
+    const headers = {
+        'Content-Type': 'application/json',
+        'version': version,
+        'timestamp': timestamp,
+        'algorithm': 'SHA-512',
+        'signature': signature,
+        'appId': this.appId,
+        'nonce': nonce
+    };
+
+    try {
+        const response = await axios.post(fullUrl, requestBody, { headers });
+        console.log('✅ Card Payment Response:', JSON.stringify(response.data, null, 2));
+        
+        if (response.data.code === 0 || response.data.code === '0') {
+            return {
+                code: '0',
+                msg: 'success',
+                data: {
+                    paymentUrl: response.data.data?.url,
+                    orderId: response.data.data?.leshuaOrderId
+                }
+            };
+        }
+        return response.data;
+    } catch (error) {
+        console.error('❌ Card Payment Error:', error.response?.data || error.message);
+        return { code: '500', msg: error.message };
+    }
+}
    async createMasterScanQR(orderId, amount, payWay, notifyUrl = null) {
     if (this.mockMode) {
         return this.mockResponse(orderId, amount);
