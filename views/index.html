@@ -355,31 +355,38 @@
         </div>
         
         <div class="card">
-            <div class="card-title">Payment Gateway</div>
-            
-            <div class="amount-section">
-                <div class="amount-label">Payment Amount</div>
-                <div class="amount-input">
-                    <span class="currency">S$</span>
-                    <input type="number" id="amount" value="1.00" step="0.01" min="0.01" readonly>
-                </div>
-                <div class="payway-select">
-                    <div class="payway-option selected" data-payway="WXZF">WeChat</div>
-                    <div class="payway-option" data-payway="ZFBZF">Alipay</div>
-                    <div class="payway-option" data-payway="PayNowPay">PayNow</div>
-                    <div class="payway-option" data-payway="GrabPay">GrabPay</div>
-                    <div class="payway-option" data-payway="CARD">💳 Credit/Debit Card</div>
-                </div>
-            </div>
-            
-            <div id="orderInfo" class="order-info"></div>
-            
-            <button class="btn-primary" id="generateBtn" onclick="generateQR()">
-                Generate QR Code
-            </button>
-            
-            <div id="infoNote" class="info-note" style="display: none;"></div>
+    <div class="card-title">Payment Gateway</div>
+    
+    <div class="amount-section">
+        <div class="amount-label">Payment Amount</div>
+        <div class="amount-input">
+            <span class="currency">S$</span>
+            <input type="number" id="amount" value="1.00" step="0.01" min="0.01" readonly>
         </div>
+        <div class="payway-select">
+            <div class="payway-option selected" data-payway="PayNowPay">PayNow</div>
+            <div class="payway-option" data-payway="WXZF">WeChat</div>
+            <div class="payway-option" data-payway="ZFBZF">Alipay</div>
+            <div class="payway-option" data-payway="GrabPay">GrabPay</div>
+        </div>
+    </div>
+    
+    <!-- ✅ ADD THIS QR CONTAINER -->
+    <div class="qr-container" id="qrContainer">
+        <div class="qr-placeholder">
+            <div class="qr-icon">📱</div>
+            <p style="color: #999;">QR code will appear here</p>
+        </div>
+    </div>
+    
+    <div id="orderInfo" class="order-info"></div>
+    
+    <button class="btn-primary" id="generateBtn" onclick="generateQR()">
+        Generate QR Code
+    </button>
+    
+    <div id="infoNote" class="info-note" style="display: none;"></div>
+</div>
         
         <div class="footer">
             Secure payment powered by YeahPay
@@ -442,11 +449,27 @@
     });
     
     // Auto-generate QR if amount is pre-filled
-    if (autoAmount && parseFloat(autoAmount) > 0) {
-        setTimeout(() => {
+   // Auto-generate QR - wait for DOM elements
+if (autoAmount && parseFloat(autoAmount) > 0) {
+    const waitForElements = setInterval(() => {
+        const qrContainer = document.getElementById('qrContainer');
+        const orderInfo = document.getElementById('orderInfo');
+        if (qrContainer && orderInfo) {
+            clearInterval(waitForElements);
+            console.log("DOM ready, generating QR...");
+            setTimeout(() => {
+                generateQR();
+            }, 500);
+        }
+    }, 100);
+    
+    setTimeout(() => {
+        clearInterval(waitForElements);
+        if (document.getElementById('qrContainer')) {
             generateQR();
-        }, 1000);
-    }
+        }
+    }, 5000);
+}
         async function generateQR() {
             const amount = document.getElementById('amount').value;
             const generateBtn = document.getElementById('generateBtn');
